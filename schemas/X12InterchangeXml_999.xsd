@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-16"?>
+<xs:schema xmlns:ns0="http://schemas.microsoft.com/Edi/X12ServiceSchema" xmlns:ins0="http://schemas.microsoft.com/BizTalk/EDI/X12/2006/InterchangeXML" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://schemas.microsoft.com/BizTalk/EDI/X12/2006/InterchangeXML" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:import schemaLocation=".\X12InterchangeXml_9991.xsd" namespace="http://schemas.microsoft.com/Edi/X12ServiceSchema" />
+  <xs:import schemaLocation=".\X12InterchangeXml_9992.xsd" />
+  <xs:element name="X12InterchangeXml">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ns0:ISA" />
+        <xs:element ref="FunctionalGroup" />
+        <xs:element ref="ns0:IEA" />
+      </xs:sequence>
+      <xs:attribute name="DelimiterSetSerializedData" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

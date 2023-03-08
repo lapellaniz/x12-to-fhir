@@ -1,0 +1,211 @@
+{
+"resourceType": "Bundle",
+    "id": "8dd97de5-cfd2-40b8-9a44-af7a026d43ea",
+    "type": "transaction",
+    "entry": [
+        {
+            "fullUrl": "urn:uuid:c6497dfb-f879-4b56-b6fe-69940aa34952",
+            "resource": {
+                "resourceType": "Patient",
+                "id": "c6497dfb-f879-4b56-b6fe-69940aa34952",
+                "identifier": [
+                    {
+                        "use": "usual",
+                        "system": "https://azure.microsoft.com/en-us/services/x12-fhir-connector/",
+                        "value": "c6497dfb-f879-4b56-b6fe-69940aa34952"
+},
+                    {
+                        "use": "official",
+                        "type": {
+                            "coding": [
+                                {
+                                    "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                                    "code": "MR"
+                                }
+                            ]
+                        },
+                        "system": "urn:oid:2.16.840.1.113883.19.5",
+                        "value": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.NM1_SubscriberName.NM109_SubscriberPrimaryIdentifier }}"
+}
+                ],
+                "address": [
+                    {
+                        "use": "home",
+                        "type": "physical",
+                        "text": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.N3_SubscriberAddress.N301_SubscriberAddressLine | Append: ', ' | Append: content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.N4_SubscriberCity_State_ZIPCode.N401_SubscriberCityName | Append: ', ' | Append: content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.N4_SubscriberCity_State_ZIPCode.N402_SubscriberStateCode | Append: ' ' | Append: content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.N4_SubscriberCity_State_ZIPCode.N403_SubscriberPostalZoneorZIPCode }}",
+"line": [
+                            "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.N3_SubscriberAddress.N301_SubscriberAddressLine }}"
+],
+                        "city": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.N4_SubscriberCity_State_ZIPCode.N401_SubscriberCityName }}",
+"state": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.N4_SubscriberCity_State_ZIPCode.N402_SubscriberStateCode }}",
+"postalCode": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.N4_SubscriberCity_State_ZIPCode.N403_SubscriberPostalZoneorZIPCode }}"
+}
+                ],
+                "name": [
+                    {
+                        "use": "official",
+                        "family": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.NM1_SubscriberName.NM103_SubscriberLastName }}",
+"given": [
+                            "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.NM1_SubscriberName.NM104_SubscriberFirstName }}"
+],
+                        "text": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.NM1_SubscriberName.NM104_SubscriberFirstName | Append: ' ' | Append: content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.NM1_SubscriberName.NM103_SubscriberLastName }}"
+}
+                ],
+                "birthDate": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.DMG_SubscriberDemographicInformation.DMG02_SubscriberBirthDate | date: "%m/%d/%Y" }}",
+{% if content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.DMG_SubscriberDemographicInformation.DMG03_SubscriberGenderCode == "M" -%}
+  "gender": "male"{% endif -%}
+{% if content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BA_Loop.DMG_SubscriberDemographicInformation.DMG03_SubscriberGenderCode == "F" -%}
+  "gender": "female"{% endif -%}
+},
+"request": {
+                "method": "POST",
+                "url": "Patient"
+            }
+        },
+        {
+            "fullUrl": "urn:uuid:42cf032e-9a59-42b1-81e8-71ad2357a5b3",
+            "resource": {
+                "resourceType": "Organization",
+                "id": "42cf032e-9a59-42b1-81e8-71ad2357a5b3",
+                "identifier": [
+                    {
+                        "use": "usual",
+                        "system": "https://azure.microsoft.com/en-us/services/x12-fhir-connector/",
+                        "value": "42cf032e-9a59-42b1-81e8-71ad2357a5b3"
+},
+                    {
+                        "use": "usual",
+                        "type": {
+                            "coding": [
+                                {
+                                    "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                                    "code": "NIIP"
+                                }
+                            ]
+                        },
+                        "value": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BB_Loop.NM1_PayerName.NM109_PayerIdentifier }}"
+}
+                ],
+                "type": [
+                    {
+                        "coding": [
+                            {
+                                "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                                "code": "ins",
+                                "display": "Insurance Company"
+                            }
+                        ],
+                        "text": "Insurance Company"
+                    }
+                ],
+                "address": [
+                    {
+                        "use": "home",
+                        "type": "physical",
+                        "text": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BB_Loop.N3_PayerAddress.N301_PayerAddressLine }}",
+"line": [
+                            "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BB_Loop.N3_PayerAddress.N301_PayerAddressLine }}"
+],
+                        "city": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BB_Loop.N4_PayerCity_State_ZIPCode.N401_PayerCityName }}",
+"state": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BB_Loop.N4_PayerCity_State_ZIPCode.N402_PayerStateorProvinceCode }}",
+"postalCode": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BB_Loop.N4_PayerCity_State_ZIPCode.N403_PayerPostalZoneorZIPCode }}"
+}
+                ],
+                "name": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.NM1_SubLoop_3.TS837_2010BB_Loop.NM1_PayerName.NM103_PayerName }}"
+},
+            "request": {
+                "method": "POST",
+                "url": "Organization"
+            }
+        },
+        {
+            "fullUrl": "urn:uuid:acfea3a7-da9b-4daf-902f-d6b0f170bdd1",
+            "resource": {
+                "resourceType": "Claim",
+                "id": "acfea3a7-da9b-4daf-902f-d6b0f170bdd1",
+                "status": "active",
+                "type": "professional",
+                "use": "claim",
+                "identifier":[
+                    {
+                        "use": "usual",
+                        "system": "https://azure.microsoft.com/en-us/services/x12-fhir-connector/",
+                        "value": "acfea3a7-da9b-4daf-902f-d6b0f170bdd1"
+}
+                ],
+                "insurer": {
+                    "reference": "urn:uuid:42cf032e-9a59-42b1-81e8-71ad2357a5b3"
+                },
+                "provider": {
+                    "reference": "urn:uuid:42cf032e-9a59-42b1-81e8-71ad2357a5b3"
+                },
+                "patient": {
+                    "reference": "urn:uuid:c6497dfb-f879-4b56-b6fe-69940aa34952"
+                },
+                "total": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.TS837_2300_Loop.CLM_ClaimInformation.CLM02_TotalClaimChargeAmount }}",
+"created": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.TS837_2300_Loop.TS837_2400_Loop.DTP_SubLoop_2.DTP_Date_ServiceDate.DTP03_ServiceDate | Date: "MM/dd/yyyy" }}",
+"diagnosis": {
+                    "diagnosisCodeableConcept": {
+                        "system": "",
+"code": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.TS837_2300_Loop.HI_SubLoop.HI_HealthCareDiagnosisCode.C022_HealthCareCodeInformation.C02202_DiagnosisCode }}",
+"display": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.TS837_2300_Loop.HI_SubLoop.HI_HealthCareDiagnosisCode.C022_HealthCareCodeInformation.C02202_DiagnosisCode }}",
+},
+                    "type": {
+                        "system": "http://terminology.hl7.org/CodeSystem/ex-diagnosistype",
+                        "code": "{{ content.TS837_2000A_Loop.TS837_2000B_Loop.TS837_2300_Loop.HI_SubLoop.HI_HealthCareDiagnosisCode.C022_HealthCareCodeInformation.C02201_DiagnosisTypeCode }}",
+}
+
+                }
+            },
+            "request": {
+                "method": "POST",
+                "url": "Claim"
+            }
+        },
+        {
+            "fullUrl": "urn:uuid:0a848d35-a63d-49f8-b6d7-52712d224e8e",
+            "resource": {
+                "resourceType": "Communication",
+                "id": "0a848d35-a63d-49f8-b6d7-52712d224e8e",
+                "identifier":[
+                    {
+                        "use": "usual",
+                        "system": "https://azure.microsoft.com/en-us/services/x12-fhir-connector/",
+                        "value": "0a848d35-a63d-49f8-b6d7-52712d224e8e"
+                    }
+                ],
+                "status": "in-progress",
+                "category": {
+                    "system": "http://terminology.hl7.org/CodeSystem/communication-category",
+                    "code": "instruction",
+                    "display": "Instruction"
+                },
+                "medium": {
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationMode",
+                    "code": "ELECTRONIC",
+                    "display": "electronic data"
+                },
+                "subject": {
+                    "reference": "urn:uuid:c6497dfb-f879-4b56-b6fe-69940aa34952"
+                },
+                "payload": [
+                    {
+                        "contentString": "<DECODED_X12_XML_BASE64>"
+},
+                    {
+                        "contentAttachment": {
+                            "url": "<URL_TO_X12_FILE>",
+                            "creation": "{{ "now" | Date: "yyyy-MM-ddT00:00:00-00:00" }}"
+                        }
+}
+                ],
+                "sender": "TBD: section. TS837_1000A_Loop Provider/",
+                "recipient": "TBD: TS837_1000B_Loop (provider or Org)"
+            },
+            "request": {
+                "method": "POST",
+                "url": "Communication"
+            }
+        }
+    ]
+}
