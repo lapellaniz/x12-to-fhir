@@ -1,0 +1,571 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Check_Bad_Messages": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@empty(body('Decode_X12_message')?['badMessages'])",
+                                false
+                            ]
+                        },
+                        {
+                            "greaterOrEquals": [
+                                "@length(body('Decode_X12_message')?['badMessages'])",
+                                1
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "For_each_Bad_Message": {
+                        "type": "Foreach",
+                        "foreach": "@body('Decode_X12_message')?['BadMessages']",
+                        "actions": {
+                            "CreateBadMessageBlob": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "azureblob_1"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": "@concat('Exception: ', items('For_each_Bad_Message')?['exception'], '\\n\\rPayload: ', base64ToString(items('For_each_Bad_Message')?['Payload']))",
+                                    "headers": {
+                                        "ReadFileMetadataFromServer": true
+                                    },
+                                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                                    "queries": {
+                                        "folderPath": "@{concat('/', toLower(items('For_each_Bad_Message')?['GuestPartnerName']), '/error')}",
+                                        "name": "@{concat(utcnow(), '-', workflow().run.name, '-', 'badmessage', '.txt')}",
+                                        "queryParametersSingleEncoded": true
+                                    }
+                                },
+                                "runAfter": {},
+                                "runtimeConfiguration": {
+                                    "contentTransfer": {
+                                        "transferMode": "Chunked"
+                                    }
+                                }
+                            },
+                            "Log_Bad_Message": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "azureloganalyticsdatacollector"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": "{\n\"TradingPartner\": \"@{variables('TradingPartnerName')}\",\n\"FileProcessed\": \"@{triggerBody()?['subject']}\",\n\"Message\": \"Bad messages found in X12 incoming message\",\n\"Exception\": \"@{items('For_each_Bad_Message')?['Exception']}\",\n\"LogicAppName\": \"@{workflow().name}\",\n\"RunId\": \"@{workflow().run.name}\",\n\"Severity\": \"Error\"\n}",
+                                    "headers": {
+                                        "Log-Type": "@parameters('LogName')"
+                                    },
+                                    "path": "/api/logs"
+                                },
+                                "runAfter": {
+                                    "CreateBadMessageBlob": [
+                                        "Succeeded",
+                                        "TimedOut",
+                                        "Skipped",
+                                        "Failed"
+                                    ]
+                                }
+                            }
+                        },
+                        "runAfter": {}
+                    }
+                },
+                "runAfter": {
+                    "ValidateMessage": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Check_Generated_Acks": {
+                "type": "If",
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@empty(body('Decode_X12_message')?['generatedAcks'])",
+                                false
+                            ]
+                        },
+                        {
+                            "greaterOrEquals": [
+                                "@length(body('Decode_X12_message')?['generatedAcks'])",
+                                1
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Process_ACKs": {
+                        "type": "Foreach",
+                        "foreach": "@body('Decode_X12_message')?['GeneratedAcks']",
+                        "actions": {
+                            "Process_TA1": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@items('Process_ACKs')?['IsTechnicalAck']",
+                                                true
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Encode_TA1": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "referenceName": "x12"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": "@xml(base64ToBinary(items('Process_ACKs')?['ackPayload']))",
+                                            "path": "/EncodeV2/ResolveByName",
+                                            "queries": {
+                                                "agreementName": "@body('Resolve_X12_agreement')?['AgreementName']"
+                                            }
+                                        },
+                                        "runAfter": {}
+                                    },
+                                    "LogTA1": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "referenceName": "azureloganalyticsdatacollector"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": "{\n\"TradingPartner\": \"\",\n\"FileProcessed\": \"\",\n\"Message\": \"Sent EDI x12 TA1.\",\n\"Exception\": \"\",\n\"LogicAppName\": \"@{workflow().name}\",\n\"RunId\": \"@{workflow().run.name}\",\n\"Severity\": \"Information\"\n}",
+                                            "headers": {
+                                                "Log-Type": "@parameters('LogName')"
+                                            },
+                                            "path": "/api/logs"
+                                        },
+                                        "runAfter": {
+                                            "Send_TA1": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    },
+                                    "Send_TA1": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "referenceName": "azureblob_1"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": "@base64ToString(body('Encode_TA1')?['content']?['$content'])",
+                                            "headers": {
+                                                "ReadFileMetadataFromServer": true
+                                            },
+                                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                                            "queries": {
+                                                "folderPath": "@{concat('/', toLower(body('Encode_TA1')?['AgreementProperties']?['GuestPartnerName']), '/out')}",
+                                                "name": "@{concat('TA1', '-', body('Resolve_X12_agreement')?['SenderIdentifier'],'-', workflow().run.name, '-', utcnow(), '.edi')}",
+                                                "queryParametersSingleEncoded": true
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Encode_TA1": [
+                                                "Succeeded"
+                                            ]
+                                        },
+                                        "runtimeConfiguration": {
+                                            "contentTransfer": {
+                                                "transferMode": "Chunked"
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {}
+                            }
+                        },
+                        "runAfter": {}
+                    }
+                },
+                "runAfter": {
+                    "ValidateMessage": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "CleanUp": {
+                "type": "Scope",
+                "actions": {
+                    "Backup_RAW_input": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "azureblob"
+                                }
+                            },
+                            "method": "post",
+                            "body": "@body('GetFile')",
+                            "headers": {
+                                "ReadFileMetadataFromServer": true
+                            },
+                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                            "queries": {
+                                "folderPath": "/backup",
+                                "name": "@{concat(variables('TradingPartnerName'), '/', utcnow(), '-', workflow().run.name, '-', variables('BlobFileName'))}",
+                                "queryParametersSingleEncoded": true
+                            }
+                        },
+                        "runAfter": {},
+                        "runtimeConfiguration": {
+                            "contentTransfer": {
+                                "transferMode": "Chunked"
+                            }
+                        }
+                    },
+                    "Delete_input": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "azureblob_1"
+                                }
+                            },
+                            "method": "delete",
+                            "headers": {
+                                "SkipDeleteIfFileNotFoundOnServer": false
+                            },
+                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files/@{encodeURIComponent(encodeURIComponent(variables('BlobFilePath')))}"
+                        },
+                        "runAfter": {
+                            "Backup_RAW_input": [
+                                "Succeeded"
+                            ]
+                        }
+                    }
+                },
+                "runAfter": {
+                    "Check_Bad_Messages": [
+                        "Succeeded",
+                        "TimedOut",
+                        "Failed",
+                        "Skipped"
+                    ],
+                    "Check_Generated_Acks": [
+                        "Succeeded",
+                        "TimedOut",
+                        "Skipped",
+                        "Failed"
+                    ],
+                    "Process_Good_Message": [
+                        "Succeeded",
+                        "TimedOut",
+                        "Skipped",
+                        "Failed"
+                    ]
+                }
+            },
+            "GetFile": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "referenceName": "azureblob_1"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files/@{encodeURIComponent(encodeURIComponent(variables('BlobFilePath')))}/content",
+                    "queries": {
+                        "inferContentType": true
+                    }
+                },
+                "runAfter": {
+                    "LogProcessStart": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "LogProcessStart": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "referenceName": "azureloganalyticsdatacollector"
+                        }
+                    },
+                    "method": "post",
+                    "body": "{\n\"TradingPartner\": \"@{variables('TradingPartnerName')}\",\n\"FileProcessed\": \"@{triggerBody()?['subject']}\",\n\"Message\": \"Received EDI x12 837.\",\n\"Exception\": \"\",\n\"LogicAppName\": \"@{workflow().name}\",\n\"RunId\": \"@{workflow().run.name}\",\n\"Severity\": \"Information\"\n}",
+                    "headers": {
+                        "Log-Type": "@parameters('LogName')"
+                    },
+                    "path": "/api/logs"
+                },
+                "runAfter": {
+                    "SetBlobFileNameVar": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Process_Good_Message": {
+                "type": "Foreach",
+                "foreach": "@body('Decode_X12_message')?['goodMessages']",
+                "actions": {},
+                "runAfter": {
+                    "ValidateMessage": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "SetBlobFileNameVar": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "BlobFileName",
+                            "type": "string",
+                            "value": "@{last(split(uriPath(triggerBody()?['data'].url), '/'))}"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "SetBlobFilePathVar": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "SetBlobFilePathVar": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "BlobFilePath",
+                            "type": "string",
+                            "value": "@{uriPath(triggerBody()?['data'].url)}"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "SetTradingPartnerNameVar": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "SetTradingPartnerNameVar": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "TradingPartnerName",
+                            "type": "string",
+                            "value": "@{first(skip(split(uriPath(triggerBody()?['data'].url), '/'), 1))}"
+                        }
+                    ]
+                },
+                "runAfter": {}
+            },
+            "ValidateMessage": {
+                "type": "Scope",
+                "actions": {
+                    "Decode_X12_message": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "x12"
+                                }
+                            },
+                            "method": "post",
+                            "body": "@body('GetFile')",
+                            "path": "/decode"
+                        },
+                        "runAfter": {
+                            "HandleResolveError": [
+                                "Skipped"
+                            ]
+                        }
+                    },
+                    "HandleDecodeError": {
+                        "type": "Scope",
+                        "actions": {
+                            "CreateDecodeErrorBlob": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "azureblob_1"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": "@concat('Exception: ', body('Decode_X12_message')['ErrorMessage'])",
+                                    "headers": {
+                                        "ReadFileMetadataFromServer": true
+                                    },
+                                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                                    "queries": {
+                                        "folderPath": "@{concat('/', variables('TradingPartnerName'), '/error')}",
+                                        "name": "@{concat(utcnow(), '-', workflow().run.name, '-', 'decodeerror','.txt')}",
+                                        "queryParametersSingleEncoded": true
+                                    }
+                                },
+                                "runAfter": {
+                                    "LogDecodingError": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "runtimeConfiguration": {
+                                    "contentTransfer": {
+                                        "transferMode": "Chunked"
+                                    }
+                                }
+                            },
+                            "LogDecodingError": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "azureloganalyticsdatacollector"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": "{\n\"TradingPartner\": \"@{variables('TradingPartnerName')}\",\n\"FileProcessed\": \"@{triggerBody()?['subject']}\",\n\"Message\": \"Error decoding X12 incoming message\",\n\"Exception\": \"@{body('Decode_X12_message')['ErrorMessage']}\",\n\"LogicAppName\": \"@{workflow().name}\",\n\"RunId\": \"@{workflow().run.name}\",\n\"Severity\": \"Error\"\n}",
+                                    "headers": {
+                                        "Log-Type": "@parameters('LogName')"
+                                    },
+                                    "path": "/api/logs"
+                                },
+                                "runAfter": {}
+                            }
+                        },
+                        "runAfter": {
+                            "Decode_X12_message": [
+                                "TimedOut",
+                                "Failed"
+                            ]
+                        }
+                    },
+                    "HandleResolveError": {
+                        "type": "Scope",
+                        "actions": {
+                            "CreateResolveErrorBlob": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "azureblob_1"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": "@concat('Exception: ', body('Resolve_X12_agreement')['ErrorMessage'])",
+                                    "headers": {
+                                        "ReadFileMetadataFromServer": true
+                                    },
+                                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                                    "queries": {
+                                        "folderPath": "@{concat('/', variables('TradingPartnerName'), '/error')}",
+                                        "name": "@{concat(utcnow(), '-', workflow().run.name, '-', 'resolveerror','.txt')}",
+                                        "queryParametersSingleEncoded": true
+                                    }
+                                },
+                                "runAfter": {
+                                    "LogResolveError": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "runtimeConfiguration": {
+                                    "contentTransfer": {
+                                        "transferMode": "Chunked"
+                                    }
+                                }
+                            },
+                            "LogResolveError": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "azureloganalyticsdatacollector"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": "{\n\"TradingPartner\": \"@{variables('TradingPartnerName')}\",\n\"FileProcessed\": \"@{triggerBody()?['subject']}\",\n\"Message\": \"Error resolving X12 incoming message\",\n\"Exception\": \"@{body('Resolve_X12_agreement')['ErrorMessage']}\",\n\"LogicAppName\": \"@{workflow().name}\",\n\"RunId\": \"@{workflow().run.name}\",\n\"Severity\": \"@{if(equals(outputs('Resolve_X12_agreement')['statusCode'], '200'), 'Information', 'Error')}\"\n}",
+                                    "headers": {
+                                        "Log-Type": "@parameters('LogName')"
+                                    },
+                                    "path": "/api/logs"
+                                },
+                                "runAfter": {}
+                            }
+                        },
+                        "runAfter": {
+                            "Resolve_X12_agreement": [
+                                "TimedOut",
+                                "Failed"
+                            ]
+                        }
+                    },
+                    "Resolve_X12_agreement": {
+                        "type": "ApiConnection",
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "referenceName": "x12"
+                                }
+                            },
+                            "method": "post",
+                            "body": "@body('GetFile')",
+                            "path": "/resolveAgreement"
+                        },
+                        "runAfter": {}
+                    }
+                },
+                "runAfter": {
+                    "GetFile": [
+                        "Succeeded"
+                    ]
+                }
+            }
+        },
+        "triggers": {
+            "When_a_resource_event_occurs": {
+                "type": "ApiConnectionWebhook",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "referenceName": "azureeventgrid"
+                        }
+                    },
+                    "body": {
+                        "properties": {
+                            "topic": "/subscriptions/14f73201-3f02-45e0-aa9f-2ccf4f7104d0/resourceGroups/rg-LAC-HIDEX-edi-DEV/providers/Microsoft.EventGrid/topics/evgt-lac-hidex-x12-dev-w2",
+                            "destination": {
+                                "endpointType": "webhook",
+                                "properties": {
+                                    "endpointUrl": "@{listCallbackUrl()}"
+                                }
+                            }
+                        }
+                    },
+                    "path": "/subscriptions/@{encodeURIComponent('14f73201-3f02-45e0-aa9f-2ccf4f7104d0')}/providers/@{encodeURIComponent('Microsoft.EventGrid.Topics')}/resource/eventSubscriptions",
+                    "queries": {
+                        "x-ms-api-version": "2017-09-15-preview",
+                        "subscriptionName": "@{workflow().name}"
+                    }
+                },
+                "splitOn": "@triggerBody()"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {}
+    },
+    "kind": "Stateful"
+}

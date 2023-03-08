@@ -1,0 +1,575 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Check_ACK": {
+                "actions": {},
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@empty(body('Decode_X12_message')?['generatedAcks'])",
+                                false
+                            ]
+                        },
+                        {
+                            "greaterOrEquals": [
+                                "@length(body('Decode_X12_message')?['generatedAcks'])",
+                                1
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "LogProcessStart": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            },
+            "Check_Bad_Messages": {
+                "actions": {
+                    "ProcessBadMessages": {
+                        "actions": {
+                            "CreateBadMessageFile": {
+                                "inputs": {
+                                    "body": "@items('ProcessBadMessages')",
+                                    "headers": {
+                                        "ReadFileMetadataFromServer": true
+                                    },
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "sftpwithssh"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "path": "/datasets/default/files",
+                                    "queries": {
+                                        "folderPath": "@{concat('/', variables('InputFileType'), '/', parameters('OutboundErrorFolder'))}",
+                                        "name": "@{concat(utcnow(), '-', workflow().run.name,'-', variables('InputFileName'))}",
+                                        "queryParametersSingleEncoded": true
+                                    }
+                                },
+                                "runAfter": {
+                                    "LogBadMessage": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "runtimeConfiguration": {
+                                    "contentTransfer": {
+                                        "transferMode": "Chunked"
+                                    }
+                                },
+                                "type": "ApiConnection"
+                            },
+                            "LogBadMessage": {
+                                "inputs": {
+                                    "body": "{\n\"TradingPartner\": \"@{body('Resolve_X12_agreement')?['GuestPartnerName']}\",\n\"FileProcessed\": \"@{variables('InputFilePath')}\",\n\"Message\": \"@{concat('Received EDI x12 ', variables('InputFileName'))}.\",\n\"Exception\": \"@{items('ProcessBadMessages')?['Exception']}\",\n\"LogicAppName\": \"@{workflow().name}\",\n\"RunId\": \"@{workflow().run.name}\",\n\"Severity\": \"Error\"\n}",
+                                    "headers": {
+                                        "Log-Type": "@parameters('LogName')"
+                                    },
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "azureloganalyticsdatacollector"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "path": "/api/logs"
+                                },
+                                "runAfter": {},
+                                "type": "ApiConnection"
+                            }
+                        },
+                        "foreach": "@body('Decode_X12_message')?['BadMessages']",
+                        "runAfter": {},
+                        "type": "Foreach"
+                    }
+                },
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@empty(body('Decode_X12_message')?['badMessages'])",
+                                false
+                            ]
+                        },
+                        {
+                            "greaterOrEquals": [
+                                "@length(body('Decode_X12_message')?['badMessages'])",
+                                1
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "LogProcessStart": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            },
+            "Check_Good_Messages": {
+                "actions": {
+                    "ProcessGoodMessages": {
+                        "actions": {
+                            "Encode_to_X12_message_by_agreement_name": {
+                                "inputs": {
+                                    "body": "@xml(base64ToBinary(items('ProcessGoodMessages')?['Payload']))",
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "x12"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "path": "/encode/resolvebyname",
+                                    "queries": {
+                                        "agreementName": "@body('Resolve_X12_agreement')?['AgreementName']"
+                                    }
+                                },
+                                "runAfter": {},
+                                "type": "ApiConnection"
+                            }
+                        },
+                        "foreach": "@body('Decode_X12_message')?['GoodMessages']",
+                        "runAfter": {
+                            "SendFileToTradingPartner": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Foreach"
+                    },
+                    "SendFileToTradingPartner": {
+                        "inputs": {
+                            "body": "@variables('InputFileContent')",
+                            "headers": {
+                                "ReadFileMetadataFromServer": true
+                            },
+                            "host": {
+                                "connection": {
+                                    "referenceName": "azureblob_2"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(parameters('TradingPartnerStorageAccountName')))}/files",
+                            "queries": {
+                                "folderPath": "@{concat(body('Resolve_X12_agreement')?['GuestPartnerName'], '/', parameters('TradingPartnerOutputFolder'))}",
+                                "name": "@variables('InputFileName')",
+                                "queryParametersSingleEncoded": true
+                            }
+                        },
+                        "runAfter": {},
+                        "runtimeConfiguration": {
+                            "contentTransfer": {
+                                "transferMode": "Chunked"
+                            }
+                        },
+                        "type": "ApiConnection"
+                    }
+                },
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@empty(body('Decode_X12_message')?['goodMessages'])",
+                                false
+                            ]
+                        },
+                        {
+                            "greaterOrEquals": [
+                                "@length(body('Decode_X12_message')?['goodMessages'])",
+                                1
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "LogProcessStart": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            },
+            "Cleanup": {
+                "actions": {
+                    "DeleteInput": {
+                        "inputs": {
+                            "headers": {
+                                "SkipDeleteIfFileNotFoundOnServer": true
+                            },
+                            "host": {
+                                "connection": {
+                                    "referenceName": "sftpwithssh"
+                                }
+                            },
+                            "method": "delete",
+                            "path": "/datasets/default/files/@{encodeURIComponent(encodeURIComponent(variables('InputFilePath')))}"
+                        },
+                        "runAfter": {
+                            "RAW_Backup": [
+                                "Succeeded",
+                                "TIMEDOUT",
+                                "FAILED"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "MoveToProcessed": {
+                        "inputs": {
+                            "body": "@variables('InputFileContent')",
+                            "headers": {
+                                "ReadFileMetadataFromServer": true
+                            },
+                            "host": {
+                                "connection": {
+                                    "referenceName": "sftpwithssh"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/datasets/default/files",
+                            "queries": {
+                                "folderPath": "@{concat(variables('InputFileType'), '/', parameters('OutboundProcessedFolder'))}",
+                                "name": "@variables('InputFileName')",
+                                "queryParametersSingleEncoded": true
+                            }
+                        },
+                        "runAfter": {},
+                        "runtimeConfiguration": {
+                            "contentTransfer": {
+                                "transferMode": "Chunked"
+                            }
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "RAW_Backup": {
+                        "inputs": {
+                            "body": "@variables('InputFileContent')",
+                            "headers": {
+                                "ReadFileMetadataFromServer": true
+                            },
+                            "host": {
+                                "connection": {
+                                    "referenceName": "azureblob"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                            "queries": {
+                                "folderPath": "@{concat('backup/', variables('InputFileType'))}",
+                                "name": "@variables('InputFileName')",
+                                "queryParametersSingleEncoded": true
+                            }
+                        },
+                        "runAfter": {
+                            "MoveToProcessed": [
+                                "Succeeded"
+                            ]
+                        },
+                        "runtimeConfiguration": {
+                            "contentTransfer": {
+                                "transferMode": "Chunked"
+                            }
+                        },
+                        "type": "ApiConnection"
+                    }
+                },
+                "runAfter": {
+                    "Check_ACK": [
+                        "Succeeded",
+                        "TIMEDOUT",
+                        "SKIPPED",
+                        "FAILED"
+                    ],
+                    "Check_Bad_Messages": [
+                        "Succeeded",
+                        "TIMEDOUT",
+                        "SKIPPED",
+                        "FAILED"
+                    ],
+                    "Check_Good_Messages": [
+                        "Succeeded",
+                        "TIMEDOUT",
+                        "SKIPPED",
+                        "FAILED"
+                    ]
+                },
+                "type": "Scope"
+            },
+            "LogProcessStart": {
+                "inputs": {
+                    "body": "{\n\"TradingPartner\": \"@{body('Resolve_X12_agreement')?['GuestPartnerName']}\",\n\"FileProcessed\": \"@{variables('InputFilePath')}\",\n\"Message\": \"@{concat('Received EDI x12 ', variables('InputFileName'))}\",\n\"Exception\": \"\",\n\"LogicAppName\": \"@{workflow().name}\",\n\"RunId\": \"@{workflow().run.name}\",\n\"Severity\": \"Information\"\n}",
+                    "headers": {
+                        "Log-Type": "@parameters('LogName')"
+                    },
+                    "host": {
+                        "connection": {
+                            "referenceName": "azureloganalyticsdatacollector"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/api/logs"
+                },
+                "runAfter": {
+                    "ValidateMessage": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "SetInputFileContent": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "InputFileContent",
+                            "type": "object",
+                            "value": "@triggerBody()?['content']"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "SetInputFileTypeVar": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "SetInputFileNameVar": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "InputFileName",
+                            "type": "string",
+                            "value": "@triggerBody()?['fileName']"
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "InitializeVariable"
+            },
+            "SetInputFilePathVar": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "InputFilePath",
+                            "type": "string",
+                            "value": "@triggerBody()?['filePath']"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "SetInputFileNameVar": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "SetInputFileTypeVar": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "InputFileType",
+                            "type": "string",
+                            "value": "@triggerBody()?['messageType']"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "SetInputFilePathVar": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "ValidateMessage": {
+                "actions": {
+                    "Decode_X12_message": {
+                        "inputs": {
+                            "body": "@variables('InputFileContent')",
+                            "host": {
+                                "connection": {
+                                    "referenceName": "x12"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/decode"
+                        },
+                        "runAfter": {
+                            "HandleResolveError": [
+                                "SKIPPED"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "HandleDecodeError": {
+                        "actions": {
+                            "CreateDecodeErrorFile": {
+                                "inputs": {
+                                    "body": "@concat('Exception: ', body('Decode_X12_message')?['ErrorMessage'])",
+                                    "headers": {
+                                        "ReadFileMetadataFromServer": true
+                                    },
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "sftpwithssh"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "path": "/datasets/default/files",
+                                    "queries": {
+                                        "folderPath": "@{concat('/', variables('InputFileType'), '/', parameters('OutboundErrorFolder'))}",
+                                        "name": "@{concat(utcnow(), '-', workflow().run.name,'-', variables('InputFileName'))}",
+                                        "queryParametersSingleEncoded": true
+                                    }
+                                },
+                                "runAfter": {
+                                    "LogDecodeError": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "runtimeConfiguration": {
+                                    "contentTransfer": {
+                                        "transferMode": "Chunked"
+                                    }
+                                },
+                                "type": "ApiConnection"
+                            },
+                            "LogDecodeError": {
+                                "inputs": {
+                                    "body": "{\n\"TradingPartner\": \"\",\n\"FileProcessed\": \"@{variables('InputFilePath')}\",\n\"Message\": \"@{concat('Received EDI x12 ', variables('InputFileName'))}\",\n\"Exception\": \"@{body('Decode_X12_message')?['ErrorMessage']}\",\n\"LogicAppName\": \"@{workflow().name}\",\n\"RunId\": \"@{workflow().run.name}\",\n\"Severity\": \"Error\"\n}",
+                                    "headers": {
+                                        "Log-Type": "@parameters('LogName')"
+                                    },
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "azureloganalyticsdatacollector"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "path": "/api/logs"
+                                },
+                                "runAfter": {},
+                                "type": "ApiConnection"
+                            }
+                        },
+                        "runAfter": {
+                            "Decode_X12_message": [
+                                "TIMEDOUT",
+                                "FAILED"
+                            ]
+                        },
+                        "type": "Scope"
+                    },
+                    "HandleResolveError": {
+                        "actions": {
+                            "CreateResolveErrorFile": {
+                                "inputs": {
+                                    "body": "@concat('Exception: ', body('Resolve_X12_agreement')?['ErrorMessage'])",
+                                    "headers": {
+                                        "ReadFileMetadataFromServer": true
+                                    },
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "sftpwithssh"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "path": "/datasets/default/files",
+                                    "queries": {
+                                        "folderPath": "@{concat('/', variables('InputFileType'), '/', parameters('OutboundErrorFolder'))}",
+                                        "name": "@{concat(utcnow(), '-', workflow().run.name,'-', variables('InputFileName'))}",
+                                        "queryParametersSingleEncoded": true
+                                    }
+                                },
+                                "runAfter": {
+                                    "LogResolveError": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "runtimeConfiguration": {
+                                    "contentTransfer": {
+                                        "transferMode": "Chunked"
+                                    }
+                                },
+                                "type": "ApiConnection"
+                            },
+                            "LogResolveError": {
+                                "inputs": {
+                                    "body": "{\n\"TradingPartner\": \"\",\n\"FileProcessed\": \"@{variables('InputFilePath')}\",\n\"Message\": \"@{concat('Received EDI x12 ', variables('InputFileName'))}\",\n\"Exception\": \"@{body('Resolve_X12_agreement')?['ErrorMessage']}\",\n\"LogicAppName\": \"@{workflow().name}\",\n\"RunId\": \"@{workflow().run.name}\",\n\"Severity\": \"Error\"\n}",
+                                    "headers": {
+                                        "Log-Type": "@parameters('LogName')"
+                                    },
+                                    "host": {
+                                        "connection": {
+                                            "referenceName": "azureloganalyticsdatacollector"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "path": "/api/logs"
+                                },
+                                "runAfter": {},
+                                "type": "ApiConnection"
+                            }
+                        },
+                        "runAfter": {
+                            "Resolve_X12_agreement": [
+                                "TIMEDOUT",
+                                "FAILED"
+                            ]
+                        },
+                        "type": "Scope"
+                    },
+                    "Resolve_X12_agreement": {
+                        "inputs": {
+                            "body": "@variables('InputFileContent')",
+                            "host": {
+                                "connection": {
+                                    "referenceName": "x12"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/resolveAgreement"
+                        },
+                        "runAfter": {},
+                        "type": "ApiConnection"
+                    }
+                },
+                "runAfter": {
+                    "SetInputFileContent": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Scope"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "manual": {
+                "inputs": {
+                    "schema": {
+                        "properties": {
+                            "content": {
+                                "type": "string"
+                            },
+                            "fileName": {
+                                "type": "string"
+                            },
+                            "filePath": {
+                                "type": "string"
+                            },
+                            "messageType": {
+                                "type": "string"
+                            },
+                            "parentTraceId": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "kind": "Http",
+                "type": "Request"
+            }
+        }
+    },
+    "kind": "Stateful"
+}

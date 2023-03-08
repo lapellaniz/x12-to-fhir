@@ -1,0 +1,26 @@
+{
+    "resourceType": "Claim",
+    "status": "active",
+    "use": "claim",
+    "billablePeriod": {
+        "start": "{{content.FunctionalGroup.TransactionSet.X12_00501_835.TS835_2000_Loop.TS835_2100_Loop.TS835_2110_Loop.DTM_ServiceDate.DTM02_ServiceDate}}"
+    },
+    "total": "{{content.FunctionalGroup.TransactionSet.X12_00501_835.TS835_2000_Loop.TS835_2100_Loop.CLP_ClaimPaymentInformation.CLP03_TotalClaimChargeAmount}}",
+    "created": "{{content.FunctionalGroup.TransactionSet.X12_00501_835.TS835_2000_Loop.TS835_2100_Loop.TS835_2110_Loop.DTM_ServiceDate.DTM02_ServiceDate}}",
+    "patient": {
+        "reference": "Patient/1"
+    },
+    "insurer": {
+        "reference": "Organization/2"
+    },
+    "provider": {
+        "reference": "Organization/1"
+    },
+    "insurance": [
+        {
+            "coverage": {
+                "reference": "Coverage/9876B1"
+            }
+        }
+    ]
+}
