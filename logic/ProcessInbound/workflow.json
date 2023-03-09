@@ -546,7 +546,7 @@
                     },
                     "body": {
                         "properties": {
-                            "topic": "/subscriptions/14f73201-3f02-45e0-aa9f-2ccf4f7104d0/resourceGroups/rg-LAC-HIDEX-edi-DEV/providers/Microsoft.EventGrid/topics/evgt-lac-hidex-x12-dev-w2",
+                            "topic": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.EventGrid/topics/{eventGridTopic}",
                             "destination": {
                                 "endpointType": "webhook",
                                 "properties": {
@@ -555,7 +555,7 @@
                             }
                         }
                     },
-                    "path": "/subscriptions/@{encodeURIComponent('14f73201-3f02-45e0-aa9f-2ccf4f7104d0')}/providers/@{encodeURIComponent('Microsoft.EventGrid.Topics')}/resource/eventSubscriptions",
+                    "path": "/subscriptions/@{encodeURIComponent('{subscriptionId}')}/providers/@{encodeURIComponent('Microsoft.EventGrid.Topics')}/resource/eventSubscriptions",
                     "queries": {
                         "x-ms-api-version": "2017-09-15-preview",
                         "subscriptionName": "@{workflow().name}"

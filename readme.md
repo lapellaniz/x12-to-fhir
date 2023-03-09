@@ -1,10 +1,10 @@
-# EDI x12 FHIR Connector
+# X12 EDI FHIR Connector
 
-Several Azure services are used to ingest and forward EDI x12 messages to their respective parties along with extracting FHIR resources and storing them in Azure FHIR Service.
+Several Azure services are used to ingest and forward X12 EDI messages to their respective parties along with extracting FHIR resources and storing them in Azure FHIR Service.
 
 ## Azure Services
 
-1. Azure Storage Account - Ingestion container for x12 files.
+1. Azure Storage Account - Ingestion container for X12 files.
 1. Azure Logic App (Standard) - Workflow engine.
 1. Azure Integration Account - Business artifacts such as schemas, trading partners, and agreements.
 
@@ -43,18 +43,18 @@ cd deploy
 az deployment group create -g 'hdpa-edi-poc' -f main.bicep --name ("main-" + (Get-Date -Format "s").replace(':', '-')) --parameters `@main.parameters.demo.json
 ```
 
-## Sample x12 Messages
+## Sample X12 Messages
 
 - [835](/messages/835/835.edi)
 - [837p](/messages/837p/X222-ambulance.edi)
 
 ## Liquid Templates
 
-[DotLiquid](https://github.com/dotliquid/dotliquid) is used as the template engine to transform the decoded EDI x12 XML data into FHIR resource types. The Azure Logic App [Transform JSON](https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-enterprise-integration-liquid-transform?tabs=consumption) connector is used for the transformation process.
+[DotLiquid](https://github.com/dotliquid/dotliquid) is used as the template engine to transform the decoded EDI X12 XML data into FHIR resource types. The Azure Logic App [Transform JSON](https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-enterprise-integration-liquid-transform?tabs=consumption) connector is used for the transformation process.
 
 > The template files should be stored under `/logic/Artifacts/Maps` when deploying them to Azure Logic Apps. The name of the file will be used as the reference id in the workflow definition. Consider including a version in the file name.
 
-- [x12Message835ToFhirClaim.liquid](/liquid/x12Message835ToFhirClaim.liquid)
+- [X12Message835ToFhirClaim.liquid](/liquid/X12Message835ToFhirClaim.liquid)
 
 ## Considerations
 
