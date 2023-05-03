@@ -2,781 +2,188 @@
     "definition": {
         "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
         "actions": {
-            "Parse_JSON": {
-                "type": "ParseJson",
-                "inputs": {
-                    "content": "@triggerBody()",
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "resourceType": {
-                                "type": "string"
-                            },
-                            "id": {
-                                "type": "string"
-                            },
-                            "type": {
-                                "type": "string"
-                            },
-                            "entry": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "fullUrl": {
-                                            "type": "string"
-                                        },
-                                        "resource": {
-                                            "type": "object",
-                                            "properties": {
-                                                "resourceType": {
-                                                    "type": "string"
-                                                },
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "meta": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "versionId": {
-                                                            "type": "string"
-                                                        },
-                                                        "lastUpdated": {
-                                                            "type": "string"
-                                                        }
-                                                    }
-                                                },
-                                                "identifier": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "system": {
-                                                                "type": "string"
-                                                            },
-                                                            "value": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "value"
-                                                        ]
-                                                    }
-                                                },
-                                                "active": {
-                                                    "type": "boolean"
-                                                },
-                                                "name": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "use": {
-                                                                "type": "string"
-                                                            },
-                                                            "family": {
-                                                                "type": "string"
-                                                            },
-                                                            "given": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "string"
-                                                                }
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "use",
-                                                            "family",
-                                                            "given"
-                                                        ]
-                                                    }
-                                                },
-                                                "telecom": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "system": {
-                                                                "type": "string"
-                                                            },
-                                                            "value": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "system",
-                                                            "value"
-                                                        ]
-                                                    }
-                                                },
-                                                "gender": {
-                                                    "type": "string"
-                                                },
-                                                "birthDate": {
-                                                    "type": "string"
-                                                },
-                                                "address": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "line": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "string"
-                                                                }
-                                                            },
-                                                            "city": {
-                                                                "type": "string"
-                                                            },
-                                                            "state": {
-                                                                "type": "string"
-                                                            },
-                                                            "postalCode": {
-                                                                "type": "string"
-                                                            },
-                                                            "country": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "line",
-                                                            "city",
-                                                            "state",
-                                                            "postalCode",
-                                                            "country"
-                                                        ]
-                                                    }
-                                                },
-                                                "maritalStatus": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "coding": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "object",
-                                                                "properties": {
-                                                                    "system": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "code": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "system",
-                                                                    "code"
-                                                                ]
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        "request": {
-                                            "type": "object",
-                                            "properties": {
-                                                "method": {
-                                                    "type": "string"
-                                                },
-                                                "url": {
-                                                    "type": "string"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "fullUrl",
-                                        "resource",
-                                        "request"
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                },
-                "runAfter": {
-                    "InitBundlePatientId": [
-                        "Succeeded"
-                    ]
-                }
-            },
-            "InitIsValid": {
-                "type": "InitializeVariable",
-                "inputs": {
-                    "variables": [
-                        {
-                            "name": "IsValid",
-                            "type": "boolean",
-                            "value": true
-                        }
-                    ]
-                },
-                "runAfter": {}
-            },
-            "InitResponseMessage": {
-                "type": "InitializeVariable",
-                "inputs": {
-                    "variables": [
-                        {
-                            "name": "ErrorMessage",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "runAfter": {
-                    "InitIsValid": [
-                        "Succeeded"
-                    ]
-                }
-            },
-            "DecideOnResponse": {
-                "type": "If",
-                "expression": {
-                    "and": [
-                        {
-                            "equals": [
-                                "@variables('IsValid')",
-                                true
-                            ]
-                        }
-                    ]
-                },
+            "CanSendToFhir": {
                 "actions": {
-                    "ValidResponse": {
-                        "type": "Response",
-                        "kind": "http",
+                    "PostBundle": {
                         "inputs": {
-                            "statusCode": 200,
+                            "authentication": {
+                                "audience": "@parameters('FhirUrl')",
+                                "type": "ManagedServiceIdentity"
+                            },
+                            "body": "@variables('FhirOutput')",
                             "headers": {
                                 "Content-Type": "application/json"
                             },
-                            "body": "@json(replace(string(outputs('GenerateResult')), variables('BundlePatientId'), variables('PatientId')))"
+                            "method": "POST",
+                            "uri": "@parameters('FhirUrl')"
                         },
-                        "runAfter": {
-                            "GenerateResult": [
-                                "Succeeded"
-                            ]
-                        }
-                    },
-                    "GenerateResult": {
-                        "type": "Compose",
-                        "inputs": {
-                            "resourceType": "Bundle",
-                            "id": "@{guid()}",
-                            "type": "transaction",
-                            "entry": "@union(body('FilterPatient'), array(outputs('RemapObservation')))"
-                        },
-                        "runAfter": {}
+                        "runAfter": {},
+                        "type": "Http"
                     }
                 },
-                "runAfter": {
-                    "HandleTerminologyTranslation": [
-                        "Succeeded"
-                    ]
-                },
-                "else": {
-                    "actions": {
-                        "InValidResponse": {
-                            "type": "Response",
-                            "kind": "http",
-                            "inputs": {
-                                "statusCode": 400,
-                                "headers": {
-                                    "Content-Type": "application/json"
-                                },
-                                "body": {
-                                    "status": "@{variables('ResponseStatus')}",
-                                    "message": "@{variables('ErrorMessage')}"
-                                }
-                            },
-                            "runAfter": {}
-                        }
-                    }
-                }
-            },
-            "InitResponseStatus": {
-                "type": "InitializeVariable",
-                "inputs": {
-                    "variables": [
+                "expression": {
+                    "and": [
                         {
-                            "name": "ResponseStatus",
-                            "type": "string",
-                            "value": "Valid"
+                            "not": {
+                                "equals": [
+                                    "@variables('FhirOutput')",
+                                    ""
+                                ]
+                            }
                         }
                     ]
                 },
                 "runAfter": {
-                    "InitResponseMessage": [
+                    "Switch": [
                         "Succeeded"
                     ]
-                }
+                },
+                "type": "If"
             },
-            "InitPatientId": {
-                "type": "InitializeVariable",
+            "InitFhirOutput": {
                 "inputs": {
                     "variables": [
                         {
-                            "name": "PatientId",
+                            "name": "FhirOutput",
                             "type": "string"
                         }
                     ]
                 },
                 "runAfter": {
-                    "InitResponseStatus": [
+                    "SetMessageType": [
                         "Succeeded"
                     ]
-                }
+                },
+                "type": "InitializeVariable"
             },
-            "InitBundlePatientId": {
-                "type": "InitializeVariable",
+            "Response": {
                 "inputs": {
-                    "variables": [
-                        {
-                            "name": "BundlePatientId",
-                            "type": "string"
-                        }
-                    ]
+                    "body": "@variables('FhirOutput')",
+                    "statusCode": 200
                 },
-                "runAfter": {
-                    "InitPatientId": [
-                        "Succeeded"
-                    ]
-                }
-            },
-            "HandlePatientResource": {
-                "type": "Scope",
-                "actions": {
-                    "VerifyPostalCode": {
-                        "type": "If",
-                        "expression": {
-                            "and": [
-                                {
-                                    "equals": [
-                                        "@outputs('TestPostalCode')",
-                                        true
-                                    ]
-                                }
-                            ]
-                        },
-                        "actions": {},
-                        "runAfter": {
-                            "TestPostalCode": [
-                                "Succeeded"
-                            ]
-                        },
-                        "else": {
-                            "actions": {
-                                "FailValidationPostalCode": {
-                                    "type": "SetVariable",
-                                    "inputs": {
-                                        "name": "IsValid",
-                                        "value": false
-                                    },
-                                    "runAfter": {}
-                                },
-                                "SetResponseStatusPostalCode": {
-                                    "type": "SetVariable",
-                                    "inputs": {
-                                        "name": "ResponseStatus",
-                                        "value": "InValid"
-                                    },
-                                    "runAfter": {
-                                        "FailValidationPostalCode": [
-                                            "Succeeded"
-                                        ]
-                                    }
-                                },
-                                "SetResponseMessagePostalCode": {
-                                    "type": "SetVariable",
-                                    "inputs": {
-                                        "name": "ErrorMessage",
-                                        "value": "PostalCode must be a valid postal code."
-                                    },
-                                    "runAfter": {
-                                        "SetResponseStatusPostalCode": [
-                                            "Succeeded"
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "TestPostalCode": {
-                        "type": "JavaScriptCode",
-                        "inputs": {
-                            "code": "var reg = /^[0-9]{5}(?:-[0-9]{4})?$/g;\r\nvar postalCode = workflowContext.actions.PatientDetails.outputs.PostalCode;\r\nreturn postalCode.match(reg) ? true : false;",
-                            "explicitDependencies": {
-                                "actions": [
-                                    "PatientDetails"
-                                ],
-                                "includeTrigger": true
-                            }
-                        },
-                        "runAfter": {
-                            "SetBundlePatientId": [
-                                "Succeeded"
-                            ]
-                        }
-                    },
-                    "VerifyPatientName": {
-                        "type": "If",
-                        "expression": {
-                            "and": [
-                                {
-                                    "not": {
-                                        "equals": [
-                                            "@outputs('PatientDetails').FirstName",
-                                            ""
-                                        ]
-                                    }
-                                },
-                                {
-                                    "not": {
-                                        "equals": [
-                                            "@outputs('PatientDetails').LastName",
-                                            ""
-                                        ]
-                                    }
-                                },
-                                {
-                                    "not": {
-                                        "equals": [
-                                            "@outputs('PatientDetails')['Gender']",
-                                            ""
-                                        ]
-                                    }
-                                }
-                            ]
-                        },
-                        "actions": {},
-                        "runAfter": {
-                            "SetBundlePatientId": [
-                                "Succeeded"
-                            ]
-                        },
-                        "else": {
-                            "actions": {
-                                "FailValidationPatientName": {
-                                    "type": "SetVariable",
-                                    "inputs": {
-                                        "name": "IsValid",
-                                        "value": false
-                                    },
-                                    "runAfter": {}
-                                },
-                                "SetResponseStatusPatientName": {
-                                    "type": "SetVariable",
-                                    "inputs": {
-                                        "name": "ResponseStatus",
-                                        "value": "InValid"
-                                    },
-                                    "runAfter": {
-                                        "FailValidationPatientName": [
-                                            "Succeeded"
-                                        ]
-                                    }
-                                },
-                                "SetResponseMessagePatientName": {
-                                    "type": "SetVariable",
-                                    "inputs": {
-                                        "name": "ErrorMessage",
-                                        "value": "Patient First and Last name is required."
-                                    },
-                                    "runAfter": {
-                                        "SetResponseStatusPatientName": [
-                                            "Succeeded"
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "CanRunEMPILookup": {
-                        "type": "If",
-                        "expression": {
-                            "and": [
-                                {
-                                    "equals": [
-                                        "@variables('IsValid')",
-                                        true
-                                    ]
-                                }
-                            ]
-                        },
-                        "actions": {
-                            "EMPILookup": {
-                                "type": "Http",
-                                "inputs": {
-                                    "method": "POST",
-                                    "uri": "@parameters('EmpiUrl')",
-                                    "headers": {
-                                        "Accept": "application/json",
-                                        "Content-Type": "application/json"
-                                    },
-                                    "body": {
-                                        "LastName": "@{outputs('PatientDetails')['LastName']}",
-                                        "FirstName": "@{outputs('PatientDetails')['FirstName']}",
-                                        "Gender": "@{outputs('PatientDetails')['Gender']}"
-                                    }
-                                },
-                                "runAfter": {}
-                            },
-                            "IsPatientFound": {
-                                "type": "If",
-                                "expression": {
-                                    "and": [
-                                        {
-                                            "equals": [
-                                                "@outputs('EMPILookup')['statusCode']",
-                                                200
-                                            ]
-                                        }
-                                    ]
-                                },
-                                "actions": {
-                                    "SetPatientId": {
-                                        "type": "SetVariable",
-                                        "inputs": {
-                                            "name": "PatientId",
-                                            "value": "@{body('EMPILookup')?['id']}"
-                                        },
-                                        "runAfter": {}
-                                    }
-                                },
-                                "runAfter": {
-                                    "EMPILookup": [
-                                        "Succeeded",
-                                        "FAILED",
-                                        "TIMEDOUT"
-                                    ]
-                                },
-                                "else": {
-                                    "actions": {
-                                        "FailEMPILookup": {
-                                            "type": "SetVariable",
-                                            "inputs": {
-                                                "name": "IsValid",
-                                                "value": false
-                                            },
-                                            "runAfter": {}
-                                        },
-                                        "SetResponseStatusEMPILookup": {
-                                            "type": "SetVariable",
-                                            "inputs": {
-                                                "name": "ResponseStatus",
-                                                "value": "Not Found"
-                                            },
-                                            "runAfter": {
-                                                "FailEMPILookup": [
-                                                    "Succeeded"
-                                                ]
-                                            }
-                                        },
-                                        "SetResponseMessageEMPILookup": {
-                                            "type": "SetVariable",
-                                            "inputs": {
-                                                "name": "ErrorMessage",
-                                                "value": "Patient was not found in enterprise master patient index. Status: @{outputs('EMPILookup')['statusCode']}"
-                                            },
-                                            "runAfter": {
-                                                "SetResponseStatusEMPILookup": [
-                                                    "Succeeded"
-                                                ]
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        "runAfter": {
-                            "VerifyPatientName": [
-                                "Succeeded"
-                            ],
-                            "VerifyPostalCode": [
-                                "Succeeded"
-                            ]
-                        }
-                    },
-                    "SetBundlePatientId": {
-                        "type": "SetVariable",
-                        "inputs": {
-                            "name": "BundlePatientId",
-                            "value": "@outputs('PatientDetails').Id"
-                        },
-                        "runAfter": {
-                            "PatientDetails": [
-                                "Succeeded"
-                            ]
-                        }
-                    },
-                    "FilterPatient": {
-                        "type": "Query",
-                        "inputs": {
-                            "from": "@body('Parse_JSON')?['entry']",
-                            "where": "@equals(item()?['resource']?['resourceType'], 'Patient')"
-                        },
-                        "runAfter": {}
-                    },
-                    "PatientDetails": {
-                        "type": "Compose",
-                        "inputs": {
-                            "Id": "@{first(body('FilterPatient'))?['resource']?['id']}",
-                            "FirstName": "@{first(first(first(body('FilterPatient'))?['resource']?['name'])?['given'])}",
-                            "LastName": "@{first(first(body('FilterPatient'))?['resource']?['name'])?['family']}",
-                            "Gender": "@first(body('FilterPatient'))?['resource']?['gender']",
-                            "DateOfBirth": "@first(body('FilterPatient'))?['resource']?['birthDate']",
-                            "PostalCode": "@{first(first(body('FilterPatient'))?['resource']?['address'])?['postalCode']}"
-                        },
-                        "runAfter": {
-                            "FilterPatient": [
-                                "Succeeded"
-                            ]
-                        }
-                    }
-                },
-                "runAfter": {
-                    "Parse_JSON": [
-                        "Succeeded"
-                    ]
-                }
-            },
-            "HandleTerminologyTranslation": {
-                "type": "Scope",
-                "actions": {
-                    "CanRunTerminologyTranslation": {
-                        "type": "If",
-                        "expression": {
-                            "and": [
-                                {
-                                    "equals": [
-                                        "@variables('IsValid')",
-                                        true
-                                    ]
-                                }
-                            ]
-                        },
-                        "actions": {
-                            "FilterObservation": {
-                                "type": "Query",
-                                "inputs": {
-                                    "from": "@body('Parse_JSON')?['entry']",
-                                    "where": "@equals(item()?['resource']?['resourceType'], 'Observation')"
-                                },
-                                "runAfter": {}
-                            },
-                            "ObservationDetails": {
-                                "type": "Compose",
-                                "inputs": {
-                                    "PatientId": "@{first(body('FilterObservation'))?['resource']?['subject']?['reference']}",
-                                    "CodeSystem": "@{first(first(body('FilterObservation'))?['resource']?['code']?['coding'])?['system']}",
-                                    "Code": "@{first(first(body('FilterObservation'))?['resource']?['code']?['coding'])?['code']}",
-                                    "CodeDisplay": "@{first(first(body('FilterObservation'))?['resource']?['code']?['coding'])?['display']}"
-                                },
-                                "runAfter": {
-                                    "FilterObservation": [
-                                        "Succeeded"
-                                    ]
-                                }
-                            },
-                            "RemapObservation": {
-                                "type": "JavaScriptCode",
-                                "inputs": {
-                                    "code": "var obs = workflowContext.actions.FilterObservation.outputs.body[0];\r\nobs.resource.code.coding[0].code = workflowContext.actions.TranslationResultDetails.outputs.TargetCode;\r\nobs.resource.code.coding[0].system = 'http://snomed.info/sct';\r\nreturn obs;",
-                                    "explicitDependencies": {
-                                        "actions": [
-                                            "FilterObservation",
-                                            "TranslationResultDetails"
-                                        ]
-                                    }
-                                },
-                                "runAfter": {
-                                    "TranslationResultDetails": [
-                                        "Succeeded"
-                                    ]
-                                }
-                            },
-                            "TranslateObservationCode": {
-                                "type": "Http",
-                                "inputs": {
-                                    "method": "GET",
-                                    "uri": "@{parameters('TranslationServiceUrl')}/rest/crosswalk/current/source/LNC/@{outputs('ObservationDetails')['Code']}",
-                                    "queries": {
-                                        "targetSource": "SNOMEDCT_US",
-                                        "apiKey": "@parameters('TranslationServiceApiKey')"
-                                    }
-                                },
-                                "runAfter": {
-                                    "ObservationDetails": [
-                                        "Succeeded"
-                                    ]
-                                }
-                            },
-                            "FilterTranslationResult": {
-                                "type": "Query",
-                                "inputs": {
-                                    "from": "@body('TranslateObservationCode')?['result']",
-                                    "where": "@equals(item()?['obsolete'], false)"
-                                },
-                                "runAfter": {
-                                    "TranslateObservationCode": [
-                                        "Succeeded"
-                                    ]
-                                }
-                            },
-                            "TranslationResultDetails": {
-                                "type": "Compose",
-                                "inputs": {
-                                    "TargetCode": "@{first(body('FilterTranslationResult'))?['ui']}"
-                                },
-                                "runAfter": {
-                                    "FilterTranslationResult": [
-                                        "Succeeded"
-                                    ]
-                                }
-                            }
-                        },
-                        "runAfter": {}
-                    }
-                },
-                "runAfter": {
-                    "HandlePatientResource": [
-                        "Succeeded"
-                    ]
-                }
-            },
-            "UnhandledExceptionResponse": {
-                "type": "Response",
                 "kind": "http",
+                "runAfter": {
+                    "CanSendToFhir": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Response"
+            },
+            "SetMessageType": {
                 "inputs": {
-                    "statusCode": 500,
+                    "variables": [
+                        {
+                            "name": "MessageType",
+                            "type": "string",
+                            "value": "@{triggerOutputs()['queries']['messageType']}"
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "InitializeVariable"
+            },
+            "Switch": {
+                "cases": {
+                    "835": {
+                        "actions": {
+                            "835ToFhir": {
+                                "inputs": {
+                                    "content": "@triggerBody()",
+                                    "map": {
+                                        "name": "x12-835-FHIR.liquid",
+                                        "source": "LogicApp"
+                                    }
+                                },
+                                "kind": "XmlToJson",
+                                "runAfter": {},
+                                "type": "Liquid"
+                            },
+                            "SetFhirOutput835": {
+                                "inputs": {
+                                    "name": "FhirOutput",
+                                    "value": "@{json(replace(string(body('835ToFhir')), '<DECODED_X12_XML_BASE64>', base64(string(triggerBody()))))}"
+                                },
+                                "runAfter": {
+                                    "835ToFhir": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "SetVariable"
+                            }
+                        },
+                        "case": "835"
+                    },
+                    "837p": {
+                        "actions": {
+                            "837pToFhir": {
+                                "inputs": {
+                                    "content": "@triggerBody()",
+                                    "map": {
+                                        "name": "x12-837p-FHIR.liquid",
+                                        "source": "LogicApp"
+                                    }
+                                },
+                                "kind": "XmlToJson",
+                                "runAfter": {},
+                                "type": "Liquid"
+                            },
+                            "SetFhirOutput837p": {
+                                "inputs": {
+                                    "name": "FhirOutput",
+                                    "value": "@{json(replace(string(body('837pToFhir')), '<DECODED_X12_XML_BASE64>', base64(string(triggerBody()))))}"
+                                },
+                                "runAfter": {
+                                    "837pToFhir": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "SetVariable"
+                            }
+                        },
+                        "case": "837p"
+                    }
+                },
+                "default": {
+                    "actions": {}
+                },
+                "expression": "@variables('MessageType')",
+                "runAfter": {
+                    "InitFhirOutput": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Switch"
+            },
+            "Unhandled": {
+                "inputs": {
+                    "body": "@variables('FhirOutput')",
                     "headers": {
                         "Content-Type": "application/json"
                     },
-                    "body": {
-                        "message": "An error occurred. See logs.",
-                        "correlationId": "@{workflow().run.name}"
-                    }
+                    "statusCode": 500
                 },
+                "kind": "http",
                 "runAfter": {
-                    "DecideOnResponse": [
+                    "Response": [
                         "SKIPPED",
-                        "FAILED"
+                        "FAILED",
+                        "TIMEDOUT"
                     ]
-                }
-            }
-        },
-        "triggers": {
-            "manual": {
-                "type": "Request",
-                "kind": "Http",
-                "inputs": {
-                    "method": "POST"
-                }
+                },
+                "type": "Response"
             }
         },
         "contentVersion": "1.0.0.0",
-        "outputs": {}
+        "outputs": {},
+        "triggers": {
+            "manual": {
+                "inputs": {
+                    "method": "POST"
+                },
+                "kind": "Http",
+                "type": "Request"
+            }
+        }
     },
     "kind": "Stateful"
 }

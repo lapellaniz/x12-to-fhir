@@ -1,2 +1,6 @@
-{    
+{
+    "FhirUrl": {
+        "type": "String",
+        "value": ""
+    }
 }
